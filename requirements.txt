@@ -3,7 +3,9 @@ pandas>=2.0
 torch>=2.2
 torch_geometric>=2.5
 xgboost>=2.0
-scikit-learn>=1.5
+scikit-learn==1.8.0  # pinned for the same reason as insurance-pricing-cann: sklearn's
+                     # internal Cython _loss module is not pickle-compatible across minor
+                     # versions, which would break any joblib-saved model here too.
 shap>=0.45
 streamlit>=1.40
 plotly>=5.20
