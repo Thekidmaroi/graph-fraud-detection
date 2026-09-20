@@ -33,7 +33,8 @@ and 77% of all nodes are unlabeled, so accuracy is dominated by the trivial
 | XGBoost tabular baseline (`src/model_baseline.py`) | done, pipeline validated |
 | GCN / GraphSAGE / GAT (`src/model_gnn.py`) | done, pipeline validated + speed-tested at full graph scale (~1s/epoch on CPU) |
 | Streamlit app (`app/app.py`) -- plain-language UI, auto demo-mode fallback | done |
-| GNNExplainer explainability | planned (the app currently shows a simpler "N flagged neighbors" signal) |
+| Edge-ablation explainability, GNNExplainer-style (`src/explain.py`) | done |
+| Bring-your-own-data training module (`src/custom_data.py`) | done |
 
 The Streamlit app is written for a non-technical visitor first (a recruiter,
 a hiring manager) -- plain-language framing, a "detective" narrative, and a
@@ -45,6 +46,42 @@ an honestly-labeled **demo mode**: a small, structured, illustrative network
 presented as if it were the real benchmark result. Drop the 3 real CSVs into
 `data/raw/` and run the training scripts, and the app automatically switches
 to the real trained models.
+
+## Bring your own data
+
+The app's third tab (**Train on Your Data**) lets any visitor upload their
+own node table and edge table (two CSVs -- any organization's transaction,
+account or claims network, not just Elliptic-shaped data) and train the
+*same* GCN, live, in the browser, no code or GPU required. `src/custom_data.py`
+builds a `torch_geometric` graph from arbitrary column names: it maps
+whichever column the visitor points at as the ID, the label, and the
+features (categorical columns are one-hot encoded automatically), matches
+edges by ID, and evaluates with the exact same `train_one` /
+`illicit_metrics` functions the Elliptic benchmark uses -- no separate code
+path, so a result here is directly comparable in kind to tab 2's numbers.
+Guardrails: a hard node/edge cap with graceful random subsampling on large
+uploads, a minimum-labeled-examples-per-class check with a plain-language
+error instead of a silent failure, and a choice between a temporal split (by
+percentile of a chosen time column, this project's own methodological
+default) or a stratified random split -- the safer default on a small
+upload, where a short time window can otherwise land zero positive examples
+in the held-out set.
+
+## Explaining a verdict, for both sides
+
+`src/explain.py` turns a raw model score into a ranked list of *why*, using
+an edge-ablation technique in the spirit of GNNExplainer (Ying et al.,
+NeurIPS 2019): remove one neighbor's connection at a time and measure how
+much the predicted probability moves. The app then renders that ranked list
+as a bar chart and generates two separate plain-language narratives from the
+same numbers -- one for the investigator/risk team deciding what to do next,
+one for the account holder whose record was flagged, framed carefully as a
+provisional, precautionary signal rather than a finding of wrongdoing (in
+the spirit of GDPR Art. 22's "right to explanation"). Both narratives are
+template-generated from the same computed factors; nothing is invented per
+case, only phrased for the audience reading it. This runs in all three tabs
+-- the demo network, the model-comparison tab, and any freshly trained
+bring-your-own-data model.
 
 **Blocked on data**: Elliptic is distributed via Kaggle / Google Drive, both
 blocked by this environment's network policy. Every line of code above has
@@ -75,7 +112,9 @@ src/metrics.py          Illicit-F1, precision/recall, PR-AUC/ROC-AUC, per-time-s
 src/model_baseline.py   XGBoost on node features only (no graph)
 src/model_gnn.py        GCN / GraphSAGE / GAT, full-batch transductive training
 src/demo_data.py        structured illustrative fallback network, used when Elliptic isn't present yet
-app/app.py              Streamlit app: plain-language subgraph investigator + model comparison
+src/custom_data.py      builds a graph from an arbitrary uploaded (nodes, edges) CSV pair -- the "Train on Your Data" tab
+src/explain.py          edge-ablation attribution + two-audience (investigator / account holder) narrative generation
+app/app.py              Streamlit app: plain-language subgraph investigator, model comparison, bring-your-own-data training, explanations
 ```
 
 ## References
@@ -88,3 +127,6 @@ app/app.py              Streamlit app: plain-language subgraph investigator + mo
 - Hamilton, Ying & Leskovec (2017), *Inductive Representation Learning on
   Large Graphs* (GraphSAGE).
 - Velickovic et al. (2018), *Graph Attention Networks*.
+- Ying et al. (2019), *GNNExplainer: Generating Explanations for Graph
+  Neural Networks*, NeurIPS 2019 -- the basis for `src/explain.py`'s
+  edge-ablation attribution.
