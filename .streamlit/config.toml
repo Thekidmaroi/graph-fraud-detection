@@ -1,0 +1,11 @@
+# Pin the app to a dark theme, matching the fraud.net-inspired design in
+# app/app.py (near-black navy canvas, bright blue accent, white text). Without
+# this, a visitor with system light mode gets Streamlit's light theme instead,
+# clashing with our dark hero/cards and hardcoded light text colors.
+[theme]
+base = "dark"
+primaryColor = "#0085FF"
+backgroundColor = "#08031F"
+secondaryBackgroundColor = "#140E36"
+textColor = "#F2F1FB"
+font = "sans serif"
