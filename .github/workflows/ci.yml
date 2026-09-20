@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      # Elliptic itself is Kaggle-gated and can't be fetched in CI (see README
+      # for the manual download step), so CI runs against the synthetic
+      # fixtures in tests/test_pipeline.py, which exercise the exact same
+      # code paths (graph construction, temporal split, metrics) with data
+      # matching Elliptic's schema.
+      - name: Run tests
+        run: pytest tests/ -v

@@ -1,0 +1,1 @@
+Drop elliptic_txs_features.csv, elliptic_txs_classes.csv and elliptic_txs_edgelist.csv here.

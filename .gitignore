@@ -1,0 +1,11 @@
+data/raw/*.csv
+data/processed/*.pt
+__pycache__/
+*.pyc
+.venv/
+.streamlit/secrets.toml
+
+# Trained model artifacts (models/*.pt, *.joblib, *_metrics.json,
+# *_per_timestep.csv) are intentionally committed -- see the insurance
+# project's .gitignore note for the same reasoning (small, needed for the
+# Streamlit Cloud deployment to serve without retraining).
